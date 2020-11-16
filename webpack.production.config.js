@@ -56,7 +56,9 @@ module.exports = {
       },
       hash: true
     }),
-    
+    new CopyWebpackPlugin([
+            { from: './src/image', to: './src/image' }
+        ])
   ],
   module: {
     rules: [
