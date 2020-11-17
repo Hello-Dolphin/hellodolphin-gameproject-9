@@ -5,7 +5,6 @@ let keyW;
 let keyD;
 let keyS;
 let keyA;
-let cursor;
 
 let backg;
 
@@ -28,15 +27,10 @@ let eventMon2;
 let monster;
 let monster2;
 let monsterGroup;
-let monsterGroup2;
 let monsterDestroy;
-let monsterDestroy2;
 
 let bullet;
 let bulletBox;
-let bullMonster;
-let bulletDestroy;
-let endgame;
 let hit;
 class GameScene extends Phaser.Scene {
     constructor(test) {
@@ -54,7 +48,7 @@ class GameScene extends Phaser.Scene {
         this.load.image('block','src/image/block.png')
     }
     create() {
-        backg = this.add.tileSprite(0,0,500,300,'back').setScale(2.5).setOrigin(0,0)
+        backg = this.add.tileSprite(0,0,500,400,'back').setScale(2.5).setOrigin(0,0)
         player = this.physics.add.sprite(300,400,'player').setScale(0.5).setDepth(5)
         this.anims.create({
             key: 'PlayerAni',
@@ -93,11 +87,9 @@ class GameScene extends Phaser.Scene {
 
         player.health = 3;
         player.maxHealth = 3;
-        // let healthBar = this.physics.add.group();
         health1 = this.add.image(50,20,'health').setOrigin(0,0)
         health2 = this.add.image(80,20,'health').setOrigin(0,0)
         health3 = this.add.image(110,20,'health').setOrigin(0,0)
-        // health.fixedToCamera = true;
 
         scoreText = this.add.text(450, 20, 'score: 0', { fontSize: '20px', fill: '#ffffff' });
 
@@ -109,20 +101,30 @@ class GameScene extends Phaser.Scene {
             })
             player.health -= 1;
         }
-
-        monsterDestroy = ()=>{ 
-            monsterGroup.children.iterate(function(monster){
-                if(monster && monster.y + monster.height >= bullet.y){
-                    monster.health -= 1
-                    bullet.destroy();
-                    if(monster.health<=0){
-                        monster.destroy();
-                    }
-                    
-                }
-            })
-            score += 50;
+        monsterDestroy = (bulletBox,monster)=>{
+            monster.health -= 1
+            if(monster.health<=0){
+            monster.destroy();
+            bulletBox.destroy();
+            score +=100;
+            }else{
+                bulletBox.destroy();
+            }
+            
         }
+        // monsterDestroy = ()=>{ 
+        //     monsterGroup.children.iterate(function(monster){
+        //         if(monster && monster.y + monster.height >= bullet.y){
+        //             monster.health -= 1
+        //             bullet.destroy();
+        //             if(monster.health<=0){
+        //                 monster.destroy();
+        //             }
+                    
+        //         }
+        //     })
+        //     score += 50;
+        // }
 
         // heal = ()=>{
         //     player.health +=1;
@@ -155,12 +157,14 @@ class GameScene extends Phaser.Scene {
                         eventMon1.delay = 700
                         monster.health = 2
                         monsterGroup.setVelocityY(300)
-                        console.log(1)
                         if(score >= 4000){
                             eventMon1.delay = 500
                             monster.health = 3
                             monsterGroup.setVelocityY(500)
-                            console.log(2)
+                            if(score >= 8000){
+                                eventMon1.delay = 400
+                                monsterGroup.setVelocityY(700)
+                            }
                         }
                     }
                      
@@ -207,26 +211,16 @@ class GameScene extends Phaser.Scene {
             paused: false,
             
         })
-
-        
-
-        
-            // monster2=function(){
-            //     // monster2.health -= 1
-            //     monster2.destroy();
-                
-            // }
+    
         bulletBox =this.physics.add.group();
         eventPlayer = this.time.addEvent({
-            delay: 400,
+            delay: 250,
             callback: function(){
                 bullet = this.physics.add.image(player.x,player.y -50,'bullet').setScale(0.3).setSize(100,250).setOffset(45,100)
                 bulletBox.add(bullet)
                 bulletBox.setVelocityY(-200);   
                 
-                this.physics.add.overlap(bullet, monsterGroup,monsterDestroy,()=>{
-                    
-                })
+                this.physics.add.overlap(bullet, monsterGroup,monsterDestroy)
                 
             },
             callbackScope: this,
@@ -256,7 +250,6 @@ class GameScene extends Phaser.Scene {
         keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
 
-        // cursor = this.input.keyboard.createCursorKey();
 
     }
     update() {
@@ -267,7 +260,6 @@ class GameScene extends Phaser.Scene {
             health3.destroy();
             if (player.health <= 1) {
                 health2.destroy();
-
                 if (player.health <= 0) {
                     score = 0;
                     this.scene.start('EndScene');
@@ -275,9 +267,6 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        // if(monster2.health <= 0){
-        //     monster2.destroy()
-        // }
         
         player.setVelocity(0, 0);
         if (keyW.isDown) {
@@ -287,18 +276,7 @@ class GameScene extends Phaser.Scene {
         if (keyA.isDown) { player.setVelocityX(-500) }
         if (keyD.isDown) { player.setVelocityX(+500) }
 
-        // if(cursor.left.isDown){
-        //     player.setVelocityX(-500);
-        // } else if(cursor.right.isDown){
-        //     player.setVelocityX(500);
-        // }else if(cursor.up.isDown){
-        //     player.setVelocityY(-500);
-        // }else if(cursor.down.isDown){
-        //     player.setVelocityY(500);
-        // }
-        //  else{
-        //     player.setVelocityX(0);
-        // }
+        
         for(let i=0;i<bulletBox.length;i++){
             let bull = bulletBox.getChildren()[i];
             if(bull.y <= -50){
