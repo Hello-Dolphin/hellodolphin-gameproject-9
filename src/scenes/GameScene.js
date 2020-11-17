@@ -1,13 +1,21 @@
+import events from "phaser/src/events";
+import PhaserMath from "phaser/src/math";
+
 let keyW;
 let keyD;
 let keyS;
 let keyA;
+let cursor;
 
 let backg;
 
 let player;
 let playerDestroy;
 let eventPlayer;
+let eventHeal;
+let heal;
+let heart;
+let heartBox;
 let health1;
 let health2;
 let health3;
@@ -27,7 +35,9 @@ let monsterDestroy2;
 let bullet;
 let bulletBox;
 let bullMonster;
+let bulletDestroy;
 let endgame;
+let hit;
 class GameScene extends Phaser.Scene {
     constructor(test) {
         super({
@@ -41,6 +51,7 @@ class GameScene extends Phaser.Scene {
         this.load.spritesheet('bullet','src/image/500.png',{frameWidth:211.33,frameHeight:412})
         this.load.spritesheet('monster','src/image/200.png',{frameWidth:532,frameHeight:946})
         this.load.image('health','src/image/Heart.png')
+        this.load.image('block','src/image/block.png')
     }
     create() {
         backg = this.add.tileSprite(0,0,500,300,'back').setScale(2.5).setOrigin(0,0)
@@ -67,16 +78,16 @@ class GameScene extends Phaser.Scene {
             repeat: -1
         })
 
-        this.anims.create({
-            key: 'BulletAni',
-            frames: this.anims.generateFrameNumbers('bullet', {
-                start: 0,
-                end: 2
+        // this.anims.create({
+        //     key: 'BulletAni',
+        //     frames: this.anims.generateFrameNumbers('bullet', {
+        //         start: 0,
+        //         end: 2
 
-            }),
-            frameRate: 5,
-            repeat: -1
-        })
+        //     }),
+        //     frameRate: 5,
+        //     repeat: -1
+        // })
 
         player.setCollideWorldBounds(true);
 
@@ -90,25 +101,44 @@ class GameScene extends Phaser.Scene {
 
         scoreText = this.add.text(450, 20, 'score: 0', { fontSize: '20px', fill: '#ffffff' });
 
-        playerDestroy = function () {
-            player.health -= 1
-            // player.disableBody(true,true)
-           
+        hit = ()=>{
+            monsterGroup.children.iterate(function(monster){
+                if(monster && monster.y + monster.height >= player.y){
+                    monster.destroy();
+                }
+            })
+            player.health -= 1;
         }
 
-        monsterDestroy = function () {
-            
-            monster.destroy();
-            score += 5;
+        monsterDestroy = ()=>{ 
+            monsterGroup.children.iterate(function(monster){
+                if(monster && monster.y + monster.height >= bullet.y){
+                    monster.health -= 1
+                    bullet.destroy();
+                    if(monster.health<=0){
+                        monster.destroy();
+                    }
+                    
+                }
+            })
+            score += 50;
         }
-        // monsterDestroy2 = function () {
-        //     monster2.health --
-        //     if(monster2.health<=0){
-        //     monster2.destroy();
-        //     score += 5;
-        //     }
+
+        // heal = ()=>{
+        //     player.health +=1;
         // }
-        // this.physics.add.overlap(player, monsterGroup ,monsterDestroy,playerDestroy)
+
+        // monsterDestroy2 = ()=>{
+
+        // }
+        // bulletDestroy = ()=>{
+        //     monsterGroup.children.iterate(function(monster){
+        //         if(monster && monster.y + monster.height >= bullet.y){
+        //             bullet.destroy();
+        //         }
+        //     })
+            
+        // }
         monsterGroup = this.physics.add.group()
         eventMon1 = this.time.addEvent({
             delay: 1000,
@@ -116,10 +146,24 @@ class GameScene extends Phaser.Scene {
                 monster = this.physics.add.sprite(Phaser.Math.Between(100,550), 0, 'monster').setScale(0.1)
                 monsterGroup.add(monster)
                 monsterGroup.setVelocityY(200)
+                monster.health = 1
                 // monster.setVelocityY(200);
                 // this.physics.add.collider(player, monsterGroup)
                 monster.anims.play('MonsterAni', true)
-                this.physics.add.overlap(player, monsterGroup ,monsterDestroy,playerDestroy)
+                this.physics.add.overlap(player, monsterGroup ,hit)
+                    if(score >= 1000){
+                        eventMon1.delay = 700
+                        monster.health = 2
+                        monsterGroup.setVelocityY(300)
+                        console.log(1)
+                        if(score >= 4000){
+                            eventMon1.delay = 500
+                            monster.health = 3
+                            monsterGroup.setVelocityY(500)
+                            console.log(2)
+                        }
+                    }
+                     
                     // this.physics.add.overlap(player, monsterGroup, ()=>{
                     //     monsters.destroy();
                     // })
@@ -129,27 +173,40 @@ class GameScene extends Phaser.Scene {
             loop: true,
             paused: false
         })
+        // heartBox = this.physics.add.group()
 
-        // eventMon2 = this.time.addEvent({
-        //     delay: 5000,
+        // eventHeal = this.time.addEvent({
+        //     delay: 2000,
         //     callback: function () {
-        //         monster2 = this.physics.add.sprite(0, 0, 'monster').setScale(0.15)
-        //         monster2.setVelocityY(200)
-        //         monster2.setVelocityX(200)
-        //         // monster2.health = 3;
-        //         // monsters.setVelocityY(200);
-        //         // this.physics.add.collider(player, monsterGroup)
-        //         this.physics.add.overlap(player, monster2, monsterDestroy,playerDestroy)
-        //             // this.physics.add.overlap(player, monsterGroup, ()=>{
-        //             //     monsters.destroy();
-        //             // })
-                    
-        //     },
-        //     callbackScope: this,
-        //     loop: true,
-        //     paused: false,
-            
+        //         heart = this.physics.add.image(Phaser.Math.Between(150,500),0,'health').setScale(1)
+        //         heartBox.add(heart)
+        //         heartBox.setVelocityY(100)
+        //         this.physics.add.overlap(player,heartBox,heal)
+        //             if(score >= 10000){
+        //                 eventHeal.delay = 15000
+        //             }
+        //     }
         // })
+
+        eventMon2 = this.time.addEvent({
+            delay: 5000,
+            callback: function () {
+                monster2 = this.physics.add.sprite(Phaser.Math.Between(100,500), 0, 'block').setScale(0.4)
+                monster2.setVelocityY(200)
+                // this.physics.add.collider(player, monsterGroup)
+                this.physics.add.overlap(player, monster2,hit)
+                if(score >= 2500){
+                    monster2.setVelocityY(400)
+                    console.log(3)
+                }
+                    // this.physics.add.overlap(player, monsterGroup)
+                    
+            },
+            callbackScope: this,
+            loop: true,
+            paused: false,
+            
+        })
 
         
 
@@ -161,13 +218,14 @@ class GameScene extends Phaser.Scene {
             // }
         bulletBox =this.physics.add.group();
         eventPlayer = this.time.addEvent({
-            delay: 800,
+            delay: 400,
             callback: function(){
-                bullet = this.physics.add.image(player.x,player.y -50,'bullet').setScale(0.3)
-                bullet.setVelocityY(-200);   
-                // bullet.anims.play('BulletAni', true)
-                this.physics.add.overlap(bullet, monster,monster2,monsterDestroy,monsterDestroy2,()=>{
-                    bullet.destroy();
+                bullet = this.physics.add.image(player.x,player.y -50,'bullet').setScale(0.3).setSize(100,250).setOffset(45,100)
+                bulletBox.add(bullet)
+                bulletBox.setVelocityY(-200);   
+                
+                this.physics.add.overlap(bullet, monsterGroup,monsterDestroy,()=>{
+                    
                 })
                 
             },
@@ -198,15 +256,11 @@ class GameScene extends Phaser.Scene {
         keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
 
-        
+        // cursor = this.input.keyboard.createCursorKey();
 
     }
     update() {
         scoreText.setText('Score: ' + score);
-        // health.setScale(1, 1);
-        // if(player.health=2){
-        //     health3.destroy()
-        // }
         player.anims.play('PlayerAni', true)
         
         if (player.health <= 2) {
@@ -224,7 +278,7 @@ class GameScene extends Phaser.Scene {
         // if(monster2.health <= 0){
         //     monster2.destroy()
         // }
-
+        
         player.setVelocity(0, 0);
         if (keyW.isDown) {
             player.setVelocityY(-500);
@@ -233,12 +287,24 @@ class GameScene extends Phaser.Scene {
         if (keyA.isDown) { player.setVelocityX(-500) }
         if (keyD.isDown) { player.setVelocityX(+500) }
 
-        // for(let i=0;i<bulletBox.length;i++){
-        //     let bull = bulletBox.getChildren()[i];
-        //     if(bull.y <= -50){
-        //         bull.destroy(true);
-        //     }
+        // if(cursor.left.isDown){
+        //     player.setVelocityX(-500);
+        // } else if(cursor.right.isDown){
+        //     player.setVelocityX(500);
+        // }else if(cursor.up.isDown){
+        //     player.setVelocityY(-500);
+        // }else if(cursor.down.isDown){
+        //     player.setVelocityY(500);
         // }
+        //  else{
+        //     player.setVelocityX(0);
+        // }
+        for(let i=0;i<bulletBox.length;i++){
+            let bull = bulletBox.getChildren()[i];
+            if(bull.y <= -50){
+                bull.destroy(true);
+            }
+        }
         // for(let i=0;i<monsterGroup.length;i++){
         //     let mon = monsterGroup.getChildren()[i];
         //     if(mon.y >= 700){
